@@ -259,30 +259,70 @@ Return only a valid JSON dictionary like:
 - Be concise and accurate.
 - If you are not confident in a match, do not include the field in the output.
 """
-mapping_rules = {
-  "RAMAZ": "RA mailing Address zip code",
-  "Drzip": "Director Zip code",
-  "DS": "Director State",
-  "RS": "Registered Agent state",
-  "PS": "Principal Address state",
-  "PZIP": "Principal Address Zip Code",
-  "IS": "Incorporator State",
-  "Inc Zip": "Incorporator Zip Code",
-  "Inc zip": "Incorporator Zip Code",
-  "RA Zip": "Register Agent Zip Code",
-  "PA Zip": "Principal Address Zip Code",
-  "Mom st": "Member or Manager State",
-  "MOM zip": "Member or Manager Zip Code",
-  "RA MailingAdd zip": "RA mailing Address zip code",
-  "Entity Name": "Legal Name",
-  "RA Address line 1": "Register Agent street address",
-  "RA Address line 2": "Register Agent Address Line 2",
-  "RA Address city": "Register Agent Address City",
-  "RA Address state": "Register Agent Address State",
-  "RA Address Zip Code": "Register Agent Address Zip Code",
-  "RA Mailing address": "Register Agent Mailing Address",
-  "RA city": "Registered Agent City"
-}
+
+def _generate_mapping_rules():
+    """
+    Generates the mapping rules programmatically to improve maintainability.
+    This function combines base entities with attributes to create a set of mapping rules.
+    Special cases that do not fit the generation pattern are handled separately.
+    """
+    base_entities = {
+        "RA": "Registered Agent",
+        "Dr": "Director",
+        "P": "Principal Address",
+        "Inc": "Incorporator",
+        "Mom": "Member or Manager",
+        "MOM": "Member or Manager",
+        "PA": "Principal Address",
+    }
+
+    attributes = {
+        "zip": "Zip Code",
+        "Zip": "Zip Code",
+        "st": "State",
+        "S": "State",
+        "city": "City",
+        "state": "State",
+        "Address line 1": "street address",
+        "Address line 2": "Address Line 2",
+        "Address Zip Code": "Address Zip Code",
+        "Mailing address": "Mailing Address",
+    }
+
+    generated_rules = {}
+
+    for entity_abbr, entity_name in base_entities.items():
+        for attr_abbr, attr_name in attributes.items():
+            # Format with space
+            generated_rules[f"{entity_abbr} {attr_abbr}"] = f"{entity_name} {attr_name}"
+            # Format with space and lowercase attribute
+            generated_rules[f"{entity_abbr} {attr_abbr.lower()}"] = f"{entity_name} {attr_name}"
+            # Format with no space, capitalized attribute
+            if not attr_abbr.islower():
+                generated_rules[f"{entity_abbr}{attr_abbr}"] = f"{entity_name} {attr_name}"
+            # Format with no space, lowercase attribute
+            generated_rules[f"{entity_abbr}{attr_abbr.lower()}"] = f"{entity_name} {attr_name}"
+
+
+    special_cases = {
+        "RAMAZ": "RA mailing Address zip code",
+        "DS": "Director State",
+        "RS": "Registered Agent state",
+        "PS": "Principal Address state",
+        "IS": "Incorporator State",
+        "PZIP": "Principal Address Zip Code",
+        "RA MailingAdd zip": "RA mailing Address zip code",
+        "Entity Name": "Legal Name",
+        # This one has "Register" instead of "Registered"
+        "RA Zip": "Register Agent Zip Code",
+        "RA Address city": "Registered Agent City"
+    }
+    
+    generated_rules.update(special_cases)
+
+    return generated_rules
+
+mapping_rules = _generate_mapping_rules()
 
 
 
