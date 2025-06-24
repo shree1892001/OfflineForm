@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Form
 from fastapi.responses import StreamingResponse
-import os, io, json
+import os, io, json, yaml
 from Services.FillOfflinePdf import FillOfflinePdf as FormFiller
 from Constants.constant import OFFLINE_FORM_TEMPLATES_PATH
 from Logging_file.logging_file import custom_logger
@@ -27,6 +27,10 @@ async def process_form(file_json_data: str = Form(...)):
         if not state_name or not entity_name:
             return {"error": "Missing 'State.stateFullDesc' or 'EntityType.orderShortName'"}
 
+        # Load configuration
+        with open('config.yaml', 'r') as f:
+            config = yaml.safe_load(f)
+
         template_filename = f"{state_name}_{entity_name}".lower().replace(" ", "") + ".pdf"
         input_path = os.path.join(OFFLINE_FORM_TEMPLATES_PATH, template_filename)
 
@@ -35,7 +39,9 @@ async def process_form(file_json_data: str = Form(...)):
 
         form_filler = FormFiller()
         form_keys = form_filler.extract_pdf_keys(input_path)
-        mapped_data = form_filler.generate_data_dict_with_gemini(form_keys, first_item)
+        
+        # Use the new database-driven mapping system
+        mapped_data = form_filler.generate_data_dict_with_ai_mapping(form_keys, first_item)
 
         output_stream = io.BytesIO()
         output_stream, unmatched_list = form_filler.fill_pdf(input_path, output_stream, mapped_data)

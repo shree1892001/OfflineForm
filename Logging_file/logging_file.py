@@ -1,6 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
-from Constants.constant import LOG_FILE_PATH
+from Constants.constant import *
 import os
 import wrapt
 

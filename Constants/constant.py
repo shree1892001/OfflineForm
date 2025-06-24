@@ -1,4 +1,8 @@
+import yaml
 from constant_path import *
+
+with open('config.yaml', 'r') as f:
+    config = yaml.safe_load(f)
 
 # otp constants
 APP_ID = '00939d9f-eb30-4510-b755-a733c6ae1573'
@@ -121,7 +125,7 @@ PAYLOAD = {
         ]
     }
 
- # ************************** image_extraction_for_identity_BOI******************************
+# ************************** image_extraction_for_identity_BOI******************************
 CLASSIFICATION_PROMPT = """
 Analyze this document image and identify the type of document by extracting only the following specific keywords if they are present: "license," "Pancard," or "aadharcard." , "passport," . Return the result in the following JSON format:        {
             "document_type": "The type of document (e.g., 'Pancard', 'License', 'AadhaarCard', etc.)",
@@ -242,9 +246,9 @@ Your task is to:
 {user_json}
 
 ### PLACEHOLDER-TO-VALUE MAPPING RULES
-The following mapping rules describe what value to take from the user JSON when a specific placeholder is found. Use these rules with high priority over other heuristics:
+The following mapping rules describe what value to take from the user JSON when a specific placeholder is found. Use these rules with high priority over other heuristics use the actual values assigned to this rules only dont place the keys:
 
-{mapping_rules}
+{get_mapping_rules()}
 
 ### OUTPUT FORMAT
 Return only a valid JSON dictionary like:
@@ -260,69 +264,21 @@ Return only a valid JSON dictionary like:
 - If you are not confident in a match, do not include the field in the output.
 """
 
-def _generate_mapping_rules():
-    """
-    Generates the mapping rules programmatically to improve maintainability.
-    This function combines base entities with attributes to create a set of mapping rules.
-    Special cases that do not fit the generation pattern are handled separately.
-    """
-    base_entities = {
-        "RA": "Registered Agent",
-        "Dr": "Director",
-        "P": "Principal Address",
-        "Inc": "Incorporator",
-        "Mom": "Member or Manager",
-        "MOM": "Member or Manager",
-        "PA": "Principal Address",
-    }
+# Initialize mapping rules after constants are loaded
+def initialize_mapping_rules():
+    """Initialize mapping rules after constants are loaded to avoid circular import"""
+    from Utils.mapping_utils import generate_mapping_rules
+    return generate_mapping_rules(config)
 
-    attributes = {
-        "zip": "Zip Code",
-        "Zip": "Zip Code",
-        "st": "State",
-        "S": "State",
-        "city": "City",
-        "state": "State",
-        "Address line 1": "street address",
-        "Address line 2": "Address Line 2",
-        "Address Zip Code": "Address Zip Code",
-        "Mailing address": "Mailing Address",
-    }
+# Lazy load mapping rules to avoid circular import
+_mapping_rules = None
 
-    generated_rules = {}
-
-    for entity_abbr, entity_name in base_entities.items():
-        for attr_abbr, attr_name in attributes.items():
-            # Format with space
-            generated_rules[f"{entity_abbr} {attr_abbr}"] = f"{entity_name} {attr_name}"
-            # Format with space and lowercase attribute
-            generated_rules[f"{entity_abbr} {attr_abbr.lower()}"] = f"{entity_name} {attr_name}"
-            # Format with no space, capitalized attribute
-            if not attr_abbr.islower():
-                generated_rules[f"{entity_abbr}{attr_abbr}"] = f"{entity_name} {attr_name}"
-            # Format with no space, lowercase attribute
-            generated_rules[f"{entity_abbr}{attr_abbr.lower()}"] = f"{entity_name} {attr_name}"
-
-
-    special_cases = {
-        "RAMAZ": "RA mailing Address zip code",
-        "DS": "Director State",
-        "RS": "Registered Agent state",
-        "PS": "Principal Address state",
-        "IS": "Incorporator State",
-        "PZIP": "Principal Address Zip Code",
-        "RA MailingAdd zip": "RA mailing Address zip code",
-        "Entity Name": "Legal Name",
-        # This one has "Register" instead of "Registered"
-        "RA Zip": "Register Agent Zip Code",
-        "RA Address city": "Registered Agent City"
-    }
-    
-    generated_rules.update(special_cases)
-
-    return generated_rules
-
-mapping_rules = _generate_mapping_rules()
+def get_mapping_rules():
+    """Get mapping rules with lazy loading"""
+    global _mapping_rules
+    if _mapping_rules is None:
+        _mapping_rules = initialize_mapping_rules()
+    return _mapping_rules
 
 
 

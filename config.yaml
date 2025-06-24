@@ -1,1 +1,30 @@
 token: "sk-proj-JTRQpquXiXZLgM7AtU4rT3BlbkFJ9BsnGdyZKnQ4OVQSwtEi"
+mapping_rules:
+  special_cases:
+    RAMAZ: "RA mailing Address zip code"
+    DS: "Director State"
+    RS: "Registered Agent state"
+    PS: "Principal Address state"
+    IS: "Incorporator State"
+    PZIP: "Principal Address Zip Code"
+    "RA MailingAdd zip": "RA mailing Address zip code"
+    "Entity Name": "Legal Name"
+    "RA Zip": "Register Agent Zip Code"
+    "RA Address city": "Registered Agent City"
+
+database:
+  type: "postgres"  # sqlite, mysql, postgres
+  sqlite:
+    database_path: "mapping_rules.db"
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "mapping_rules"
+    username: "root"
+    password: ""
+  postgres:
+    host: "localhost"
+    port: 5432
+    database: "mapping_rules"
+    username: "postgres"
+    password: "postgres"
